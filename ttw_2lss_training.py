@@ -1,19 +1,13 @@
-# ==================================
-# IMPORTAMOS LAS LIBRERIAS NECESARIAS
-# ===================================
-
-# -*- coding: utf-8 -*-
-
-# -- Manejo de datos
+''' Implementation of a neural network to discriminate ttW '''
+# -- Import libraries 
 import pandas as pd
 import numpy as np
 import ROOT as r
-from read_data import *
-
-# -- Para plottear
+import df_utils as dfu
+from samples import smp2df
 import matplotlib.pyplot as plt
 
-# -- Librerias de ML
+# -- ML libraries 
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
@@ -25,36 +19,54 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from tensorflow import keras
 
+
 if __name__ == "__main__":
-    mainpath = "/beegfs/data/TOPnanoAODv6/ttW_MC_Ntuples_skim/2016/"
-    muestras = {"ttbar"      : ["TTLep_pow_part1"], 
-                "ttW"        : ["TTWToLNu_PSW"]}
-    # -- Variables que vamos a usar para procesar datos:
-    vars_keep = ["nLepGood"]
-    vars_friend_recl = ["nJet25_Recl"] 
+    mainpath = "/beegfs/data/TOPnanoAODv6/ttW_MC_Ntuples_skim/"
 
-    # -- Muestras que vamos a utilizar
-    ttbar = muestras["ttbar"][0]
-    ttw = muestras["ttW"][0]
+    # Dictionary with sample names
+    samples = {
+      "ttbar" : { 2016 : "TTLep_pow_part1", 
+                  2017 : "TTLep_pow",
+                  2018 : "TTLep_pow"}, 
+      "ttW"   : { 2016 : "TTWToLNu_PSW", 
+                  2017 : "TTWToLNu_PSW",
+                  2018 : "TTWToLNu_fxfx"}
+    }
+    # -- Variables to read from trees (can be defined in a friend tree) 
+    friends = ["1_recl_enero"]
+    branches = ["year", "nLepGood", "nJet25_Recl"]
     
-    # -- Nos cargamos los dataframes con la funcion load_data (definida en read_data.py)
-    df_ttw   = load_data(mainpath + ttw, vars_keep)
-    df_ttw = label_dataframe(df_ttw, 1)
-    print(df_ttw)
-    df_ttw   = add_friends(df_ttw, mainpath+"1_recl_enero/"+ttw, vars_friend_recl)
-    print(df_ttw)
+    # Create the signal dataframe
+    smp_ttw = smp2df(branches = branches, 
+                     friends = friends, 
+                     name = "df_ttw")
+    for year in [2016, 2017, 2018]:
+      smp_ttw.load_data(
+        path = mainpath + "%s"%year, 
+        process = samples["ttW"][year]) 
+    smp_ttw.label_dataframe(val = 1)   
 
-    df_ttbar = load_data(mainpath + ttbar, vars_keep)
-    df_ttbar = add_friends(df_ttbar, mainpath+"1_recl_enero/"+ttbar, vars_friend_recl)
-    df_ttbar = label_dataframe(df_ttbar, 0)
+    # Create the bkg dataframe
+    smp_tt = smp2df(branches = branches, 
+                    friends = friends, 
+                    name = "df_tt")
+    for year in [2016, 2017, 2018]:
+      smp_tt.load_data(
+        path = mainpath + "%s"%year, 
+        process = samples["ttbar"][year]) 
+    smp_tt.label_dataframe(val = 0)
+    
+    df_ttw = smp_ttw.df
+    df_ttbar = smp_tt.df   
 
-   
+
     # Combinamos todos los dataframes
+    vars_train = ["year", "nLepGood", "nJet25_Recl"]
     dfs_to_combine = [df_ttw, df_ttbar]
-    df = combine_dataframes(dfs_to_combine, axis = 0) # Para concatenar filas
+    df = dfu.combine_dataframes(dfs_to_combine, axis = 0) # Para concatenar filas
     print(df)
 
-    vars_train = ["nLepGood"]
+    # From Andrea
     X_train, X_test, y_train, y_test = train_test_split(df[vars_train], df['is_signal'], test_size=0.5, random_state=1)
     df_train=pd.concat([X_train,y_train], axis=1)
     df_validation=pd.concat([X_test,y_test], axis=1)
