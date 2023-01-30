@@ -20,7 +20,7 @@ def combine_dataframes(dfs, axis = 0):
     super_df = pd.concat(dfs, axis, ignore_index=ignore_index) 
     return super_df
 
-def load_data(file_, vars_ = [], treename = "Events", start = 0, stop = 100): 
+def load_data(file_, vars_ = [], treename = "Events", start = 0, stop = 1000): 
     '''
     Esta funcion sirve para leer rootfiles y convertirlas en
     pandas.DataFrames --> 
@@ -61,7 +61,7 @@ def label_dataframe(df, label):
     '''
     nentries = df.shape[0]
     etiqueta = np.array( [label]*nentries )
-    df_label = pd.DataFrame(etiqueta, columns = ["Flavor"])
+    df_label = pd.DataFrame(etiqueta, columns = ["is_signal"])
     df = combine_dataframes([df, df_label], axis = 1)
     return df
     
