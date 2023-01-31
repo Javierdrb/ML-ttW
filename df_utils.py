@@ -3,9 +3,6 @@ import pandas as pd
 import numpy as np
 import ROOT as r
 
-# -- This removes a very noisy numpy warning  
-from warnings import filterwarnings
-filterwarnings(action='ignore', category=DeprecationWarning, message='`np.object` is a deprecated alias')
 
 def combine_dataframes(dfs, axis = 0):
     '''

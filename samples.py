@@ -6,6 +6,11 @@ import ROOT as r
 import os
 from root_numpy import tree2array
 
+# -- This removes a very noisy numpy warning  
+from warnings import filterwarnings
+filterwarnings(action='ignore', category=DeprecationWarning, message='`np.object` is a deprecated alias')
+
+
 class smp2df:
   samples = []
   def __init__(self, branches, friends, name = "df"):
@@ -41,6 +46,9 @@ class smp2df:
 
     # Convert into dataframe and concatenate with the main one
     self.df = dfu.combine_dataframes([self.df, deepcopy(pd.DataFrame(arr, columns = self.branches))])
+
+    # Now convert 1D arrays into floats
+    self.df = self.df.replace(r'\[|\]', '', regex = True).astype(np.float32)
     tfile.Close()
     return
   
