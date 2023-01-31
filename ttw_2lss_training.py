@@ -61,49 +61,49 @@ if __name__ == "__main__":
 
 #    df_ttw = np.hstack(df_ttw)
     print(df_ttw)
-#    # Combinamos todos los dataframes
-#    vars_train = ["year", "nLepGood", "nJet25_Recl"]
-#    dfs_to_combine = [df_ttw, df_ttbar]
-#    df = dfu.combine_dataframes(dfs_to_combine, axis = 0) # Para concatenar filas
-#    print(df)
-#
-#    # From Andrea
-#    X_train, X_test, y_train, y_test = train_test_split(df[vars_train], df['is_signal'], test_size=0.5, random_state=1)
-#    df_train=pd.concat([X_train,y_train], axis=1)
-#    df_validation=pd.concat([X_test,y_test], axis=1)
-#
-#
-#
-#    model = keras.models.Sequential()
-#    normal_ini=keras.initializers.glorot_normal(seed=None)
-#    model.add(keras.layers.Dense(64,  input_shape = (len(vars_train),), activation='relu'))
-#    model.add(keras.layers.Dense(32, activation='relu'))
-#    model.add(keras.layers.Dense(8, activation='relu'))
-#    model.add(keras.layers.Dense(2, activation='softmax'))
-#    model.summary()
-#    
-#    sgd = keras.optimizers.SGD(lr=0.01)
-#    adamax=keras.optimizers.Adamax(learning_rate=0.002, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
-#    model.compile(loss='binary_crossentropy', optimizer=adamax, metrics = ["accuracy"])
-#    histObj = model.fit(df_train[vars_train], keras.utils.to_categorical(df_train["is_signal"]), epochs=5, batch_size=1000,validation_data=(df_validation[vars_train], keras.utils.to_categorical(df_validation["is_signal"])))
-#    
-#    
-#    #Prediccion sobre test
-#    from sklearn.metrics import roc_curve
-#    from sklearn.metrics import roc_auc_score
-#    import matplotlib.pyplot as plt
-#    
-#    print("Running on test sample. This may take a moment.")
-#    probs = model.predict(df_validation[vars_train])#predict probability over test sample
-#    AUC = roc_auc_score(df_validation["is_signal"], probs[:,1])
-#    print("Test Area under Curve = {0}".format(AUC))
-#    
-#    #Prediccion sobre train
-#    from sklearn.metrics import roc_curve
-#    from sklearn.metrics import roc_auc_score
-#    import matplotlib.pyplot as plt
-#    
-#    print("Running on test sample. This may take a moment.")
-#    probs2 = model.predict(df_train[vars_train])#predict probability over test sample
-#    AUC2 = roc_auc_score(df_train["is_signal"], probs2[:,1])
-#    print("Test Area under Curve = {0}".format(AUC2))
+    # Combinamos todos los dataframes
+    vars_train = ["year", "nLepGood", "nJet25_Recl"]
+    dfs_to_combine = [df_ttw, df_ttbar]
+    df = dfu.combine_dataframes(dfs_to_combine, axis = 0) # Para concatenar filas
+    print(df)
+
+    # From Andrea
+    X_train, X_test, y_train, y_test = train_test_split(df[vars_train], df['is_signal'], test_size=0.5, random_state=1)
+    df_train=pd.concat([X_train,y_train], axis=1)
+    df_validation=pd.concat([X_test,y_test], axis=1)
+
+
+
+    model = keras.models.Sequential()
+    normal_ini=keras.initializers.glorot_normal(seed=None)
+    model.add(keras.layers.Dense(64,  input_shape = (len(vars_train),), activation='relu'))
+    model.add(keras.layers.Dense(32, activation='relu'))
+    model.add(keras.layers.Dense(8, activation='relu'))
+    model.add(keras.layers.Dense(2, activation='softmax'))
+    model.summary()
+    
+    sgd = keras.optimizers.SGD(lr=0.01)
+    adamax=keras.optimizers.Adamax(learning_rate=0.002, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
+    model.compile(loss='binary_crossentropy', optimizer=adamax, metrics = ["accuracy"])
+    histObj = model.fit(df_train[vars_train], keras.utils.to_categorical(df_train["is_signal"]), epochs=5, batch_size=1000,validation_data=(df_validation[vars_train], keras.utils.to_categorical(df_validation["is_signal"])))
+    
+    
+    #Prediccion sobre test
+    from sklearn.metrics import roc_curve
+    from sklearn.metrics import roc_auc_score
+    import matplotlib.pyplot as plt
+    
+    print("Running on test sample. This may take a moment.")
+    probs = model.predict(df_validation[vars_train])#predict probability over test sample
+    AUC = roc_auc_score(df_validation["is_signal"], probs[:,1])
+    print("Test Area under Curve = {0}".format(AUC))
+    
+    #Prediccion sobre train
+    from sklearn.metrics import roc_curve
+    from sklearn.metrics import roc_auc_score
+    import matplotlib.pyplot as plt
+    
+    print("Running on test sample. This may take a moment.")
+    probs2 = model.predict(df_train[vars_train])#predict probability over test sample
+    AUC2 = roc_auc_score(df_train["is_signal"], probs2[:,1])
+    print("Test Area under Curve = {0}".format(AUC2))
