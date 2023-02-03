@@ -21,7 +21,7 @@ class smp2df:
     self.df = pd.DataFrame()
     return
 
-  def load_data(self, path, process, start = 0, stop = 1000):
+  def load_data(self, path, selection="",process="", start = 0, stop = 1000):   #stop:numero de eventos a considerar (1000 bn en local, a mas cluster)
     '''
     This function returns a pandas dataframe in which each row corresponds to
     an event, and each column is a variable.
@@ -42,7 +42,7 @@ class smp2df:
     # -- Now add friends
     for ftree in self.friends:
       ttree.AddFriend("Friends", os.path.join(path, ftree, process + "_Friend.root"))
-    arr = tree2array(ttree, branches = self.branches, start = start, stop = stop)
+    arr = tree2array(ttree,selection=selection, branches = self.branches, start = start, stop = stop) #Check no 0 jets
 
     # Convert into dataframe and concatenate with the main one
     self.df = dfu.combine_dataframes([self.df, deepcopy(pd.DataFrame(arr, columns = self.branches))])
