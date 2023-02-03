@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+    
 ''' Implementation of a neural network to discriminate ttW ''' #just trying
 # -- Import libraries 
 import pandas as pd
@@ -6,6 +8,7 @@ import ROOT as r
 import df_utils as dfu
 from samples import smp2df
 import matplotlib.pyplot as plt
+from functions import *
 
 # -- ML libraries 
 from sklearn.metrics import confusion_matrix
@@ -19,67 +22,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from tensorflow import keras
-
-def roc_auc_plot(y_true, y_proba, label=' ', l='-', lw=1.0):
-    from sklearn.metrics import roc_curve, roc_auc_score
-    fpr, tpr, _ = roc_curve(y_true, y_proba[:,1])
-    ax.plot(fpr, tpr, linestyle=l, linewidth=lw,label="%s (area=%.3f)"%(label,roc_auc_score(y_true, y_proba[:,1])))
-
-def plotLearningCurves(*histObjs):
-    """This function processes all histories given in the tuple.
-    Left losses, right accuracies
-    """
-    # too many plots
-    if len(histObjs)>10: 
-        print('Too many objects!')
-        return
-    # missing names
-    for histObj in histObjs:
-        if not hasattr(histObj, 'name'): histObj.name='?'
-    names=[]
-    # loss plot
-    plt.figure(figsize=(12,6))
-    plt.rcParams.update({'font.size': 15}) #Larger font size
-    plt.subplot(1,2,1)
-    # loop through arguments
-    for histObj in histObjs:
-        plt.plot(histObj.history['loss'])
-        names.append('train '+histObj.name)
-        plt.plot(histObj.history['val_loss'])
-        names.append('validation '+histObj.name)
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(names, loc='upper right')
-    
-
-    #accuracy plot
-    plt.subplot(1,2,2)
-    for histObj in histObjs:
-        plt.plot(histObj.history['accuracy'])
-        plt.plot(histObj.history['val_accuracy'])
-    plt.title('model accuracy')
-    #plt.ylim(0.5,1)
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(names, loc='upper left')
-    
-    plt.savefig("evolNN.png")
-    
-    # min, max for loss and acc
-    for histObj in histObjs:
-        h=histObj.history
-        maxIdxTrain = np.argmax(h['accuracy'])
-        maxIdxTest  = np.argmax(h['val_accuracy'])
-        minIdxTrain = np.argmin(h['loss'])
-        minIdxTest  = np.argmin(h['val_loss'])
-        
-        strg='\tTrain: Min loss {:6.3f} at {:3d} --- Max acc {:6.3f} at {:3d} | '+histObj.name
-        print(strg.format(h['loss'][minIdxTrain],minIdxTrain,h['accuracy'][maxIdxTrain],maxIdxTrain))
-        strg='\tValidation : Min loss {:6.3f} at {:3d} --- Max acc {:6.3f} at {:3d} | '+histObj.name
-        print(strg.format(h['val_loss'][minIdxTest],minIdxTest,h['val_accuracy'][maxIdxTest],maxIdxTest))
-        print(len(strg)*'-')
-
 
 
 if __name__ == "__main__":
@@ -95,8 +37,18 @@ if __name__ == "__main__":
                   2018 : "TTWToLNu_fxfx"}
     }
     # -- Variables to read from trees (can be defined in a friend tree) 
-    friends = ["1_recl_enero"]   #¿Estamos usando los friends que genere en su dia?
-    branches = ["year", "nLepGood", "nJet25_Recl", "LepGood_pt[0]", "LepGood_pt[1]","htJet25j_Recl","MET_pt","nBJetLoose25_Recl","nBJetMedium25_Recl","JetSel_Recl_pt[0]","nBJetLoose40_Recl","nBJetMedium40_Recl"]#"LepGood_conePt[0]","LepGood_eta[0]","LepGood_phi[0]","LepGood_mass[0]","LepGood_conePt[1]","LepGood_eta[1]","LepGood_phi[1]","LepGood_mass[1]"]#,"LepGood_dz[0]"],"LepGood_dxy[0]","LepGood_dxy[1]"
+    friends = ["1_recl_enero"] 
+
+    branches = ["year", 
+                "nLepGood", 
+                "LepGood_pt[0]", "LepGood_eta[0]","LepGood_phi[0]","LepGood_mass[0]",
+                "LepGood_pt[1]", "LepGood_eta[1]","LepGood_phi[1]","LepGood_mass[1]",
+                "nJet25_Recl", "htJet25j_Recl", "nBJetLoose25_Recl",
+                "MET_pt", 
+                "nBJetMedium25_Recl",
+                "JetSel_Recl_pt[0]", 
+                "nBJetLoose40_Recl",
+                "nBJetMedium40_Recl"]#"LepGood_conePt[0]","LepGood_eta[0]","LepGood_phi[0]","LepGood_mass[0]","LepGood_conePt[1]","LepGood_eta[1]","LepGood_phi[1]","LepGood_mass[1]"]#,"LepGood_dz[0]"],"LepGood_dxy[0]","LepGood_dxy[1]"
     
     
     
@@ -128,25 +80,30 @@ if __name__ == "__main__":
     df_ttw = smp_ttw.df
     df_ttbar = smp_tt.df   
 
-#    df_ttw = np.hstack(df_ttw)
-    print(df_ttw)
     
     #Definicion variables 'complejas'
-    combipt=df_ttw["LepGood_pt[0]"]+df_ttw["LepGood_pt[1]"]
-    df_ttw=pd.concat([df_ttw,combipt.rename('combipt')],axis=1)
+    #combipt=df_ttw["LepGood_pt[0]"]+df_ttw["LepGood_pt[1]"]
+    #df_ttw=pd.concat([df_ttw,combipt.rename('combipt')],axis=1)
+    #
+    #combipt=df_ttbar["LepGood_pt[0]"]+df_ttbar["LepGood_pt[1]"]
+    #df_ttbar=pd.concat([df_ttbar,combipt.rename('combipt')],axis=1)
     
-    combipt=df_ttbar["LepGood_pt[0]"]+df_ttbar["LepGood_pt[1]"]
-    df_ttbar=pd.concat([df_ttbar,combipt.rename('combipt')],axis=1)
+    dfs_to_combine = [df_ttw, df_ttbar]
+    df = dfu.combine_dataframes(dfs_to_combine, axis = 0) # Para concatenar filas
+
+    # Further processing of the dataframe
     
-    
+    # Create 4 vectors
+    df["l1"] = create4vec(df["LepGood_pt[0]"], df["LepGood_eta[0]"], df["LepGood_phi[0]"], df["LepGood_mass[0]"])
+    df["l2"] = create4vec(df["LepGood_pt[1]"], df["LepGood_eta[1]"], df["LepGood_phi[1]"], df["LepGood_mass[1]"])
+    df["mll"] = mll(df["l1"], df["l2"])
+    print(df["mll"])
     
     
     
     # Combinamos todos los dataframes
     vars_train = ["combipt","JetSel_Recl_pt[0]", "nJet25_Recl","htJet25j_Recl","year", "nLepGood","LepGood_pt[0]","MET_pt","nBJetLoose25_Recl","nBJetMedium25_Recl","nBJetLoose40_Recl","nBJetMedium40_Recl"]
-    dfs_to_combine = [df_ttw, df_ttbar]
-    df = dfu.combine_dataframes(dfs_to_combine, axis = 0) # Para concatenar filas
-    print(df)
+    
 
     # From Andrea
     X_train, X_test, y_train, y_test = train_test_split(df[vars_train], df['is_signal'], test_size=0.3, random_state=1)
@@ -206,6 +163,4 @@ if __name__ == "__main__":
     
     
     plotLearningCurves(histObj)
-    
-
 
