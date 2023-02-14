@@ -27,6 +27,7 @@ from sklearn import tree, ensemble
 #pd.set_option('display.max_columns',None)
 
 
+
 def roc_auc_plot(y_true, y_proba, label=' ', l='-', lw=1.0):
     from sklearn.metrics import roc_curve, roc_auc_score
     fpr, tpr, _ = roc_curve(y_true, y_proba[:,1])
@@ -121,14 +122,7 @@ if __name__ == "__main__":
     
     
     btagging(df)
-    print(df)		
-	    
-	    
-	    
-    
-    
-	
-    
+    print(df)
     
     ############################### Definicion variables 'complejas'
     

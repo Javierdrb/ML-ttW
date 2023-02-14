@@ -47,42 +47,85 @@ def deltaeta(p1,p2):
 def deltar(p1,p2):
 	return np.sqrt(deltaphi(p1,p2)**2+deltaeta(p1,p2)**2)
 
-def btagging(df):
+def btagging(df):   #Function  to identify which is the first b-jet and create associated columns for pt,eta,phi,mass (copying those of the jet that corresponds)
+	#STILL WORKING IN IT:
+						#Different values in working point depending on the year
+						#Written just for a fixed value of jets
     njets = df["nJet25_Recl"].values.astype(int)
     btag_scores = df.loc[:, ["JetSel_Recl_btagDeepFlavB[{}]".format(j) for j in range(njets.max())]].values
-    is_btagged = (btag_scores >= 0.3093)
-    btagged_jets = np.apply_along_axis(np.where, axis=1, arr=is_btagged)
-    b1_props = np.full((df.shape[0], 4), -99.0)
-    b1_props[btagged_jets >= 0, :] = df.loc[:, ["JetSel_Recl_pt[{}]".format(j) for j in range(njets.max())]].values[btagged_jets >= 0, :]
-    df[["B1_pt", "B1_eta", "B1_phi", "B1_mass"]] = b1_props
+    
+    is_btagged = (btag_scores >= 0.3093)   #medium point for year 2016 (add condition depending on the year)
+    
+    btagged_jets = np.apply_along_axis(np.argmax, axis=1, arr=is_btagged)
+    btagged_jets[~is_btagged.any(axis=1)]=-1   #-1 if no btag (so as not to confuse with 0 that appears if the first jet is b-tagged)
+    
+    
+    # Get the indexes of 1st btagged jet in each row
+    mask=(btagged_jets>=0)
+    idx=btagged_jets[mask]
+    
+    # Select the pt, eta, phi, and mass columns for the first b-tagged jet for each row
+    # Create an array of dummy values with the same shape as `B1_pt`
+    B1_pt = np.repeat(-99.0,df.shape[0])
+    B1_eta = np.repeat(-99.0,df.shape[0])
+    B1_phi = np.repeat(-99.0,df.shape[0])
+    B1_mass = np.repeat(-99.0,df.shape[0])
+    
+    # Replace the appropriate values in `B1_pt`
+    B1_pt[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_pt[0]"],
+     np.where(idx == 1, df.loc[mask, "JetSel_Recl_pt[1]"],
+     df.loc[mask, "JetSel_Recl_pt[2]"]))
+    B1_eta[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_eta[0]"],
+     np.where(idx == 1, df.loc[mask, "JetSel_Recl_eta[1]"],
+     df.loc[mask, "JetSel_Recl_eta[2]"]))
+    B1_phi[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_phi[0]"],
+     np.where(idx == 1, df.loc[mask, "JetSel_Recl_phi[1]"],
+     df.loc[mask, "JetSel_Recl_phi[2]"]))
+    B1_mass[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_mass[0]"],
+     np.where(idx == 1, df.loc[mask, "JetSel_Recl_mass[1]"],
+     df.loc[mask, "JetSel_Recl_mass[2]"]))
+     
+    #B1_pt[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_pt[0]"],df.loc[mask, "JetSel_Recl_pt[1]"])    #For exactly 2 jets
+    #B1_eta[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_eta[0]"],df.loc[mask, "JetSel_Recl_eta[1]"])
+    #B1_phi[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_phi[0]"],df.loc[mask, "JetSel_Recl_phi[1]"])
+    #B1_mass[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_mass[0]"],df.loc[mask, "JetSel_Recl_mass[1]"])
+     
+    
+     
+     # Replace the `B1_pt` column in `df`
+    df["B1_pt"] = B1_pt
+    df["B1_eta"] = B1_eta
+    df["B1_phi"] = B1_phi
+    df["B1_mass"] = B1_mass
+
     return df
 	
-def btagging(df):
-	nrows=df.shape[0]
-	for i in range(nrows): #nrows
-		njets=df["nJet25_Recl"][i].astype(int)
-		btag=[]
-		nobtag=[]
+#def btagging(df):      #Less efficient b-tagging (with high amount of data even does not work)
+#	nrows=df.shape[0]
+#	for i in range(nrows): #nrows
+#		njets=df["nJet25_Recl"][i].astype(int)
+#		btag=[]
+#		nobtag=[]
 		#print("nJets:",njets)
-		for j in range(njets):
+#		for j in range(njets):
 			#print(j,df["JetSel_Recl_btagDeepFlavB[{}]".format(j)][i])
 			
-			if df["JetSel_Recl_btagDeepFlavB[{}]".format(j)][i]>=0.3093:
-				btag.append(j)
-			else:
-				nobtag.append(j)
+#			if df["JetSel_Recl_btagDeepFlavB[{}]".format(j)][i]>=0.3093:
+#				btag.append(j)
+#			else:
+#				nobtag.append(j)
 		#print("Btagged in event {}".format(i),btag,"Non-btagged in event {}".format(i),nobtag)
-		if btag:
-			df.loc[i,"B1_pt"]=df["JetSel_Recl_pt[{}]".format(btag[0])][i]
-			df.loc[i,"B1_eta"]=df["JetSel_Recl_eta[{}]".format(btag[0])][i]
-			df.loc[i,"B1_phi"]=df["JetSel_Recl_phi[{}]".format(btag[0])][i]
-			df.loc[i,"B1_mass"]=df["JetSel_Recl_mass[{}]".format(btag[0])][i]
+#		if btag:
+#			df.loc[i,"B1_pt"]=df["JetSel_Recl_pt[{}]".format(btag[0])][i]
+#			df.loc[i,"B1_eta"]=df["JetSel_Recl_eta[{}]".format(btag[0])][i]
+#			df.loc[i,"B1_phi"]=df["JetSel_Recl_phi[{}]".format(btag[0])][i]
+#			df.loc[i,"B1_mass"]=df["JetSel_Recl_mass[{}]".format(btag[0])][i]
 				
-		else:
-			df.loc[i,"B1_pt"]=-99
-			df.loc[i,"B1_eta"]=-99
-			df.loc[i,"B1_phi"]=-99
-			df.loc[i,"B1_mass"]=-99
+#		else:
+#			df.loc[i,"B1_pt"]=-99
+#			df.loc[i,"B1_eta"]=-99
+#			df.loc[i,"B1_phi"]=-99
+#			df.loc[i,"B1_mass"]=-99
 	
 
 #def roc_auc_plot(y_true, y_proba, label=' ', l='-', lw=1.0):
