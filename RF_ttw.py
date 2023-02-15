@@ -49,18 +49,21 @@ if __name__ == "__main__":
     # -- Variables to read from trees (can be defined in a friend tree) 
     friends = ["1_recl_enero"]   
     branches = ["year", 
-                "nLepGood", 
-                "LepGood_pt[0]", "LepGood_eta[0]","LepGood_phi[0]","LepGood_mass[0]",
-                "LepGood_pt[1]", "LepGood_eta[1]","LepGood_phi[1]","LepGood_mass[1]",
-                "JetSel_Recl_pt[0]", "JetSel_Recl_eta[0]","JetSel_Recl_phi[0]","JetSel_Recl_mass[0]",
-                "JetSel_Recl_pt[1]", "JetSel_Recl_eta[1]","JetSel_Recl_phi[1]","JetSel_Recl_mass[1]",
-                "JetSel_Recl_pt[2]", "JetSel_Recl_eta[2]","JetSel_Recl_phi[2]","JetSel_Recl_mass[2]",
+                #"nLepGood", 
+                "LepGood_pt","LepGood_eta","LepGood_phi","LepGood_mass",
+                #"LepGood_pt[0]", "LepGood_eta[0]","LepGood_phi[0]","LepGood_mass[0]",
+                #"LepGood_pt[1]", "LepGood_eta[1]","LepGood_phi[1]","LepGood_mass[1]",
+                "JetSel_Recl_pt","JetSel_Recl_eta","JetSel_Recl_phi","JetSel_Recl_mass",
+                #"JetSel_Recl_pt[0]", "JetSel_Recl_eta[0]","JetSel_Recl_phi[0]","JetSel_Recl_mass[0]",
+                #"JetSel_Recl_pt[1]", "JetSel_Recl_eta[1]","JetSel_Recl_phi[1]","JetSel_Recl_mass[1]",
+                #"JetSel_Recl_pt[2]", "JetSel_Recl_eta[2]","JetSel_Recl_phi[2]","JetSel_Recl_mass[2]",
                 #"JetSel_Recl_pt[2]","JetSel_Recl_pt[3]","JetSel_Recl_pt[4]",
                 "nJet25_Recl", "htJet25j_Recl", 
                 "MET_pt", 
-                "nBJetLoose25_Recl","nBJetMedium25_Recl", "nBJetLoose40_Recl","nBJetMedium40_Recl",
+                #"nBJetLoose25_Recl","nBJetMedium25_Recl", "nBJetLoose40_Recl","nBJetMedium40_Recl",
                 "LepGood_jetBTagDeepFlav[0]","LepGood_jetBTagDeepFlav[1]",
-                "JetSel_Recl_btagDeepFlavB[0]","JetSel_Recl_btagDeepFlavB[1]","JetSel_Recl_btagDeepFlavB[2]"]
+                #"JetSel_Recl_btagDeepFlavB[0]","JetSel_Recl_btagDeepFlavB[1]","JetSel_Recl_btagDeepFlavB[2]",
+                "JetSel_Recl_btagDeepFlavB"]
     
     
     
@@ -75,8 +78,9 @@ if __name__ == "__main__":
     for year in [2016, 2017, 2018]:
       smp_ttw.load_data(                   #loaddata en samples.py
         path = mainpath + "%s"%year, 
-        selection = "nJet25_Recl==3",  #&(JetSel_Recl_btagDeepFlavB[0]>=0.5)",    #Selection to add in case we deal with certain requirement (for instance if we add a variable on jets, we must ask for having at least one jet)
+        selection = "nJet25_Recl<=5",  #&(JetSel_Recl_btagDeepFlavB[0]>=0.5)",    #Selection to add in case we deal with certain requirement (for instance if we add a variable on jets, we must ask for having at least one jet)
         stop=1000000,
+        #stop=10000,
         process = samples["ttW"][year]) 
     smp_ttw.label_dataframe(val = 1)   #etiquetado (señal 1 bck 0)
 
@@ -87,19 +91,14 @@ if __name__ == "__main__":
     for year in [2016, 2017, 2018]:
       smp_tt.load_data(
         path = mainpath + "%s"%year, 
-        selection = "nJet25_Recl==3",
+        selection = "nJet25_Recl<=5",
         stop=1000000,
+        #stop=10000,
         process = samples["ttbar"][year]) 
     smp_tt.label_dataframe(val = 0)   #check that since this is bckg, val must be 0
     
     df_ttw = smp_ttw.df
     df_ttbar = smp_tt.df
-   
-   
-   #Dummy values:
-    #df_ttw["JetSel_Recl_btagDeepFlavB[1]"]=np.where(df_ttw["JetSel_Recl_btagDeepFlavB[1]"]<=0.03,-99,df_ttw["JetSel_Recl_btagDeepFlavB[1]"])
-    #df_ttbar["JetSel_Recl_btagDeepFlavB[1]"]=np.where(df_ttbar["JetSel_Recl_btagDeepFlavB[1]"]<=0.03,-99,df_ttbar["JetSel_Recl_btagDeepFlavB[1]"])
-	
 
     print(df_ttw)
     
@@ -121,17 +120,18 @@ if __name__ == "__main__":
     df=df.assign(B1_mass=100)
     
     
-    btagging(df)
+    btagging(df,workingpoint="Medium")
     print(df)
     
-    ############################### Definicion variables 'complejas'
+    
+    ############################### Complex variable definition
     
     # Create 4 vectors
-    l1 = create4vec(df["LepGood_pt[0]"], df["LepGood_eta[0]"], df["LepGood_phi[0]"], df["LepGood_mass[0]"])
-    l2 = create4vec(df["LepGood_pt[1]"], df["LepGood_eta[1]"], df["LepGood_phi[1]"], df["LepGood_mass[1]"])
+    l1 = create4vec(df["lep1_pt"], df["lep1_eta"], df["lep1_phi"], df["lep1_mass"])
+    l2 = create4vec(df["lep2_pt"], df["lep2_eta"], df["lep2_phi"], df["lep2_mass"])
     
-    j1 = create4vec(df["JetSel_Recl_pt[0]"], df["JetSel_Recl_eta[0]"], df["JetSel_Recl_phi[0]"], df["JetSel_Recl_mass[0]"])
-    j2 = create4vec(df["JetSel_Recl_pt[1]"], df["JetSel_Recl_eta[1]"], df["JetSel_Recl_phi[1]"], df["JetSel_Recl_mass[1]"])
+    j1 = create4vec(df["jet1_pt"], df["jet1_eta"], df["jet1_phi"], df["jet1_mass"])
+    j2 = create4vec(df["jet2_pt"], df["jet2_eta"], df["jet2_phi"], df["jet2_mass"])
     
     b1=create4vec(df["B1_pt"],df["B1_eta"],df["B1_phi"],df["B1_mass"])
     
@@ -145,8 +145,8 @@ if __name__ == "__main__":
     df["deltarbj"]=deltar(b1,j1)
     
     #Variables to add to the training
-    vars_train = ["LepGood_pt[0]","LepGood_pt[1]","JetSel_Recl_pt[0]","MET_pt","mll","deltarjet","htJet25j_Recl","deltarlep",
-    "JetSel_Recl_btagDeepFlavB[0]","JetSel_Recl_btagDeepFlavB[1]","deltarlj","LepGood_jetBTagDeepFlav[0]","deltarblep","deltarbj"]
+    vars_train = ["lep1_pt","lep2_pt","jet1_pt","MET_pt","mll","deltarjet","htJet25j_Recl","deltarlep",
+     "jet1_btagDeepFlavB","jet2_btagDeepFlavB","deltarlj","deltarblep","deltarbj"]
      #vars_train=["mll","deltarlep","deltarjet","combipt",
      #           "year", 
       #          "nLepGood", 

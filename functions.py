@@ -47,19 +47,29 @@ def deltaeta(p1,p2):
 def deltar(p1,p2):
 	return np.sqrt(deltaphi(p1,p2)**2+deltaeta(p1,p2)**2)
 
-def btagging(df):   #Function  to identify which is the first b-jet and create associated columns for pt,eta,phi,mass (copying those of the jet that corresponds)
+def btagging(df,workingpoint="Medium"):   #Function  to identify which is the first b-jet and create associated columns for pt,eta,phi,mass (copying those of the jet that corresponds)
 	#STILL WORKING IN IT:
 						#Different values in working point depending on the year
 						#Written just for a fixed value of jets
     njets = df["nJet25_Recl"].values.astype(int)
-    btag_scores = df.loc[:, ["JetSel_Recl_btagDeepFlavB[{}]".format(j) for j in range(njets.max())]].values
+    #btag_scores = df.loc[:, ["JetSel_Recl_btagDeepFlavB[{}]".format(j) for j in range(njets.max())]].values
     
-    is_btagged = (btag_scores >= 0.3093)   #medium point for year 2016 (add condition depending on the year)
+    btag_scores = df.loc[:, ["jet{}_btagDeepFlavB".format(j) for j in range(1,njets.max()+1)]].values
+    year=df.loc[:,["year"]].values
+    
+
+  
+    if workingpoint == "Medium":
+        is_btagged = ((btag_scores >= 0.3093) & (year == 2016)) | ((btag_scores >= 0.3033) & (year == 2017)) | ((btag_scores >= 0.2770) & (year == 2018))   
+    elif workingpoint == "Loose":
+        is_btagged = ((btag_scores >= 0.0614) & (year == 2016)) | ((btag_scores >= 0.0521) & (year == 2017)) | ((btag_scores >= 0.0494) & (year == 2018))
+    else:
+        is_btagged = ((btag_scores >= 0.7221) & (year == 2016)) | ((btag_scores >= 0.7489) & (year == 2017)) | ((btag_scores >= 0.7264) & (year == 2018))
+    
     
     btagged_jets = np.apply_along_axis(np.argmax, axis=1, arr=is_btagged)
-    btagged_jets[~is_btagged.any(axis=1)]=-1   #-1 if no btag (so as not to confuse with 0 that appears if the first jet is b-tagged)
-    
-    
+    btagged_jets[~is_btagged.any(axis=1)] = -1
+   
     # Get the indexes of 1st btagged jet in each row
     mask=(btagged_jets>=0)
     idx=btagged_jets[mask]
@@ -71,27 +81,20 @@ def btagging(df):   #Function  to identify which is the first b-jet and create a
     B1_phi = np.repeat(-99.0,df.shape[0])
     B1_mass = np.repeat(-99.0,df.shape[0])
     
-    # Replace the appropriate values in `B1_pt`
-    B1_pt[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_pt[0]"],
-     np.where(idx == 1, df.loc[mask, "JetSel_Recl_pt[1]"],
-     df.loc[mask, "JetSel_Recl_pt[2]"]))
-    B1_eta[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_eta[0]"],
-     np.where(idx == 1, df.loc[mask, "JetSel_Recl_eta[1]"],
-     df.loc[mask, "JetSel_Recl_eta[2]"]))
-    B1_phi[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_phi[0]"],
-     np.where(idx == 1, df.loc[mask, "JetSel_Recl_phi[1]"],
-     df.loc[mask, "JetSel_Recl_phi[2]"]))
-    B1_mass[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_mass[0]"],
-     np.where(idx == 1, df.loc[mask, "JetSel_Recl_mass[1]"],
-     df.loc[mask, "JetSel_Recl_mass[2]"]))
-     
-    #B1_pt[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_pt[0]"],df.loc[mask, "JetSel_Recl_pt[1]"])    #For exactly 2 jets
-    #B1_eta[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_eta[0]"],df.loc[mask, "JetSel_Recl_eta[1]"])
-    #B1_phi[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_phi[0]"],df.loc[mask, "JetSel_Recl_phi[1]"])
-    #B1_mass[mask] = np.where(idx == 0, df.loc[mask, "JetSel_Recl_mass[0]"],df.loc[mask, "JetSel_Recl_mass[1]"])
-     
+    # Replace the appropriate values in `B1_pt`    ####   NOTE: it is prepared for 5 jets, if this is different, it must be fixed
+    B1_pt[mask] = np.where(idx == 0, df.loc[mask, "jet1_pt"],
+     np.where(idx == 1, df.loc[mask, "jet2_pt"],np.where(idx == 2, df.loc[mask, "jet3_pt"], np.where(idx == 3, df.loc[mask, "jet4_pt"],
+     df.loc[mask, "jet5_pt"]))))
+    B1_eta[mask] = np.where(idx == 0, df.loc[mask, "jet1_eta"],
+     np.where(idx == 1, df.loc[mask, "jet2_eta"],np.where(idx == 2, df.loc[mask, "jet3_eta"], np.where(idx == 3, df.loc[mask, "jet4_eta"],
+     df.loc[mask, "jet5_eta"]))))
+    B1_phi[mask] = np.where(idx == 0, df.loc[mask, "jet1_phi"],
+     np.where(idx == 1, df.loc[mask, "jet2_phi"],np.where(idx == 2, df.loc[mask, "jet3_phi"], np.where(idx == 3, df.loc[mask, "jet4_phi"],
+     df.loc[mask, "jet5_phi"]))))
+    B1_mass[mask] = np.where(idx == 0, df.loc[mask, "jet1_mass"],
+     np.where(idx == 1, df.loc[mask, "jet2_mass"],np.where(idx == 2, df.loc[mask, "jet3_mass"], np.where(idx == 3, df.loc[mask, "jet4_mass"],
+     df.loc[mask, "jet5_mass"]))))
     
-     
      # Replace the `B1_pt` column in `df`
     df["B1_pt"] = B1_pt
     df["B1_eta"] = B1_eta
