@@ -28,7 +28,7 @@ class smp2df:
     self.df = pd.DataFrame()
     return
   
-  def process_dataframe(self, df):
+  def process_dataframe(self, df):   #In fact now we don't need this
     ''' This function is very specific, but it's the easiest thing to do if we want
     to deal with jagged arrays. It is very unefficient, but works :). '''
       
@@ -70,16 +70,16 @@ class smp2df:
       
     # -- Load the main tree and add friends
     tfile = r.TFile.Open(os.path.join(path, process + ".root"))    
-    ttree = tfile.Get("Events")
-    for ftree in self.friends:
-      ttree.AddFriend("Friends", os.path.join(path, ftree, process + "_Friend.root"))
+    ttree = tfile.Get("Friends")
+    #for ftree in self.friends:
+    #  ttree.AddFriend("Friends", os.path.join(path, ftree, process + "_Friend.root"))
     
     # Get the information as a numpy array and convert into dataframe
     arr = tree2array(ttree,selection=selection,object_selection=object_selection, branches = self.branches, start = start, stop = stop) #Check no 0 jets
     df = pd.DataFrame(arr, columns = self.branches)
     
     # Now process the dataformat a little bit so we have equally dimensioned arrays...
-    df = self.process_dataframe(df)
+   # df = self.process_dataframe(df)
     
     # Now combine in the class' dataframe 
     self.df = dfu.combine_dataframes([self.df, deepcopy(df)])
