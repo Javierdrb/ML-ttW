@@ -23,6 +23,9 @@ from sklearn.metrics import classification_report, confusion_matrix, auc, precis
 from tensorflow import keras
 from sklearn import tree, ensemble
 
+import time
+start_time = time.time()
+
 #pd.set_option('display.max_rows',10)
 #pd.set_option('display.max_columns',None)
 
@@ -125,7 +128,7 @@ if __name__ == "__main__":
     df=df.assign(B2_mass=100)
     
     
-    btagging(df,workingpoint="Medium")
+    btagging(df,workingpoint="Loose")
     
     
     
@@ -139,8 +142,8 @@ if __name__ == "__main__":
     j1 = create4vec(df["jet1_pt"], df["jet1_eta"], df["jet1_phi"], df["jet1_mass"])
     j2 = create4vec(df["jet2_pt"], df["jet2_eta"], df["jet2_phi"], df["jet2_mass"])
     
-    b1=create4vec(df["B1_pt"],df["B1_eta"],df["B1_phi"],df["B1_mass"])
-    b2=create4vec(df["B2_pt"],df["B2_eta"],df["B2_phi"],df["B2_mass"])
+    #b1=create4vec(df["B1_pt"],df["B1_eta"],df["B1_phi"],df["B1_mass"])
+    #b2=create4vec(df["B2_pt"],df["B2_eta"],df["B2_phi"],df["B2_mass"])
     
     
     
@@ -151,33 +154,33 @@ if __name__ == "__main__":
     df["mlj12"]=mll(l1,j2)
     df["mlj21"]=mll(l2,j1)
     
-    df["deltaphilj11"]=deltaphi(l1,j1)
-    df["deltaphilj12"]=deltaphi(l1,j2)
-    df["deltaphilj21"]=deltaphi(l2,j1)
-    df["deltaphilj22"]=deltaphi(l2,j2)
+    #df["deltaphilj11"]=deltaphi(l1,j1)
+    #df["deltaphilj12"]=deltaphi(l1,j2)
+    #df["deltaphilj21"]=deltaphi(l2,j1)
+    #df["deltaphilj22"]=deltaphi(l2,j2)
     
-    df["deltarlj11"]=deltar(l1,j1)
-    df["deltarlj12"]=deltar(l1,j2)
-    df["deltarlj21"]=deltar(l2,j1)
-    df["deltarlj22"]=deltar(l2,j2)
+    #df["deltarlj11"]=deltar(l1,j1)
+    #df["deltarlj12"]=deltar(l1,j2)
+    #df["deltarlj21"]=deltar(l2,j1)
+    #df["deltarlj22"]=deltar(l2,j2)
     
     df["combipt"]=combipt(l1,l2)
-    df["deltaetalep"]=deltaeta(l1,l2)
-    df["deltaphilep"]=deltaphi(l1,l2)
-    df["deltarlep"]=deltar(l1,l2)
-    df["deltarjet"]=deltar(j1,j2)
+    #df["deltaetalep"]=deltaeta(l1,l2)
+    #df["deltaphilep"]=deltaphi(l1,l2)
+    #df["deltarlep"]=deltar(l1,l2)
+    #df["deltarjet"]=deltar(j1,j2)
     
     
     
-    df["deltarlb11"]=deltar(l1,b1)
-    df["deltarlb12"]=deltar(l1,b2)
-    df["deltarlb21"]=deltar(l2,b1)
-    df["deltarlb22"]=deltar(l2,b2)
+    #df["deltarlb11"]=deltar(l1,b1)
+    #df["deltarlb12"]=deltar(l1,b2)
+    #df["deltarlb21"]=deltar(l2,b1)
+    #df["deltarlb22"]=deltar(l2,b2)
     
-    df["deltarjb11"]=deltar(j1,b1)
-    df["deltarjb12"]=deltar(j1,b2)
-    df["deltarjb21"]=deltar(j2,b1)
-    df["deltarjb22"]=deltar(j2,b2)
+    #df["deltarjb11"]=deltar(j1,b1)
+    #df["deltarjb12"]=deltar(j1,b2)
+    #df["deltarjb21"]=deltar(j2,b1)
+    #df["deltarjb22"]=deltar(j2,b2)
     
     df["notBjets"]=df["nJet25_Recl"]-df["nBJetLoose25_Recl"]
     
@@ -193,35 +196,45 @@ if __name__ == "__main__":
     
     
     #Variables to add to the training
-    #vars_train = ["lep1_pt","lep2_pt","jet1_pt","MET_pt","mll","deltarjet","htJet25j_Recl","deltarlep",
-    # "jet1_btagDeepFlavB","jet2_btagDeepFlavB","deltarlj","deltarblep","deltarbj","combipt"]
-    vars_train=["notBjets","deltaetalep","deltaphilep","deltarjet","deltarlep","combipt","mll",
-                         "deltaphilj11","deltaphilj12","deltaphilj21","deltaphilj22",
-                         "deltarlj11","deltarlj12","deltarlj21","deltarlj22",
-                         "deltarlb11","deltarlb12","deltarlb21","deltarlb22",
-                         "deltarjb11","deltarjb12","deltarjb21","deltarjb22",
-                         "mlj11","mlj12","mlj21","mlj22",
-                         "Flav_elec","Flav_muon","Flav_mix",
-                         "B1_pt","B1_eta","B1_phi","B1_mass",
-                         "B2_pt","B2_eta","B2_phi","B2_mass",
-                         "year", 
-                         "nLepGood", 
-                         "lep1_pt", "lep1_eta","lep1_phi","lep1_mass","lep1_charge","lep1_elec",
-                         "lep2_pt", "lep2_eta","lep2_phi","lep2_mass","lep2_elec","lep2_charge",
-                         "nJet25_Recl", 
-                         "htJet25j_Recl", 
-                         "MET_pt", 
-                         "nBJetLoose25_Recl",
-                         "nBJetMedium25_Recl",
-                         "nBJetLoose40_Recl",
-                         "nBJetMedium40_Recl",
-                         "jet1_pt", "jet1_eta","jet1_phi","jet1_mass","jet1_btagDeepFlavB", 
-                         "jet2_pt", "jet2_eta","jet2_phi","jet2_mass","jet2_btagDeepFlavB",
-                         "jet3_pt", "jet3_eta","jet3_phi","jet3_mass","jet3_btagDeepFlavB",
-                         "jet4_pt", "jet4_eta","jet4_phi","jet4_mass","jet4_btagDeepFlavB",
-                         "jet5_pt", "jet5_eta","jet5_phi","jet5_mass","jet5_btagDeepFlavB",
-                         "jet6_pt", "jet6_eta","jet6_phi","jet6_mass","jet6_btagDeepFlavB",
-                         "jet7_pt", "jet7_eta","jet7_phi","jet7_mass","jet7_btagDeepFlavB"]
+    vars_train = ["year","htJet25j_Recl","jet2_pt","nJet25_Recl","jet3_pt","jet2_mass","lep2_pt","jet3_btagDeepFlavB",
+     "lep1_pt","mlj11","jet3_mass","jet1_pt","jet4_mass","lep1_charge","lep2_mass","jet4_pt","jet3_eta","jet3_phi",
+     'jet1_mass','jet4_btagDeepFlavB','Flav_muon','jet4_phi','mll','lep2_elec','jet4_eta','mlj12',"jet5_eta","Flav_elec",'mlj21','mlj22',"combipt","lep2_charge",   #aprox hasta aqui bn para RF
+     'jet2_phi','notBjets','jet2_btagDeepFlavB', 'jet5_pt', 'jet2_eta', 'nBJetLoose25_Recl', 'MET_pt',
+     "B2_pt",'B1_mass', 'B1_pt', 'B2_mass',"B1_eta","B2_eta"]   #Up to here ok for the NN
+     
+     
+     #'lep1_mass', 'jet5_mass','jet5_btagDeepFlavB','nBJetMedium40_Recl','nBJetLoose40_Recl', 'Flav_mix', 'B2_eta','lep1_elec',
+     #'nBJetMedium25_Recl','jet5_phi', 'jet6_phi','jet1_btagDeepFlavB','jet6_pt', 'B1_eta',
+     #'jet1_eta','jet7_eta','jet6_mass','lep1_eta','lep2_eta','jet6_btagDeepFlavB','B2_phi','jet6_eta','B1_phi','lep1_phi','jet1_phi']
+     
+     
+    #vars_train=["notBjets","deltaetalep","deltaphilep","deltarjet","deltarlep","combipt","mll","year",
+     #                    "deltaphilj11","deltaphilj12","deltaphilj21","deltaphilj22",
+      #                   "deltarlj11","deltarlj12","deltarlj21","deltarlj22",
+       #                  "deltarlb11","deltarlb12","deltarlb21","deltarlb22",
+        #                 "deltarjb11","deltarjb12","deltarjb21","deltarjb22",
+         #                "mlj11","mlj12","mlj21","mlj22",
+          #               "Flav_elec","Flav_muon","Flav_mix",
+           #              "B1_pt","B1_eta","B1_phi","B1_mass",
+            #             "B2_pt","B2_eta","B2_phi","B2_mass",
+             #            "year", 
+              #           "nLepGood", 
+               #          "lep1_pt", "lep1_eta","lep1_phi","lep1_mass","lep1_charge","lep1_elec",
+                #         "lep2_pt", "lep2_eta","lep2_phi","lep2_mass","lep2_elec","lep2_charge",
+                 #        "nJet25_Recl", 
+                  #       "htJet25j_Recl", 
+                   #      "MET_pt", 
+                    #     "nBJetLoose25_Recl",
+                     #    "nBJetMedium25_Recl",
+                      #   "nBJetLoose40_Recl",
+                       #  "nBJetMedium40_Recl",
+                        # "jet1_pt", "jet1_eta","jet1_phi","jet1_mass","jet1_btagDeepFlavB", 
+                         #"jet2_pt", "jet2_eta","jet2_phi","jet2_mass","jet2_btagDeepFlavB",
+                         #"jet3_pt", "jet3_eta","jet3_phi","jet3_mass","jet3_btagDeepFlavB",
+                         #"jet4_pt", "jet4_eta","jet4_phi","jet4_mass","jet4_btagDeepFlavB",
+                         #"jet5_pt", "jet5_eta","jet5_phi","jet5_mass","jet5_btagDeepFlavB",
+                         #"jet6_pt", "jet6_eta","jet6_phi","jet6_mass","jet6_btagDeepFlavB",
+                         #"jet7_pt", "jet7_eta","jet7_phi","jet7_mass","jet7_btagDeepFlavB"]
     
     
     # From Andrea
@@ -234,7 +247,7 @@ if __name__ == "__main__":
     df_validation=pd.concat([X_validation,y_validation], axis=1)
     
     
-    RF=RandomForestClassifier(n_jobs=-1,min_samples_leaf=1000,max_depth=50,min_samples_split=2)
+    RF=RandomForestClassifier(n_jobs=-1,min_samples_leaf=1000,max_depth=1/3*len(vars_train),min_samples_split=2)
     RF.fit(X_train,y_train)  #Trainig of the RF
     
     
@@ -253,11 +266,14 @@ if __name__ == "__main__":
     model.add(keras.layers.Dense(2, activation='softmax'))
     model.summary()
     
+    
+    
+    
     sgd = keras.optimizers.SGD(lr=0.01)
     #adamax=keras.optimizers.Adamax(learning_rate=0.02, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
     adam=keras.optimizers.Adam(lr=0.0005)
     model.compile(loss='binary_crossentropy', optimizer=adam, metrics = ["accuracy"])
-    histObj = model.fit(df_train[vars_train], keras.utils.to_categorical(df_train["is_signal"]), epochs=25, batch_size=1000,shuffle=True,validation_data=(df_validation[vars_train], keras.utils.to_categorical(df_validation["is_signal"])))
+    histObj = model.fit(df_train[vars_train], keras.utils.to_categorical(df_train["is_signal"]), epochs=35, batch_size=1000,shuffle=True,validation_data=(df_validation[vars_train], keras.utils.to_categorical(df_validation["is_signal"])))
     
     
     
@@ -266,13 +282,15 @@ if __name__ == "__main__":
     train=df_train    							#Code for printing the relative importance of variables
     features_list = train.columns.values
     feature_importance = RF.feature_importances_
-    sorted_idx = np.argsort(feature_importance)[:20]
-    plt.figure(figsize=(10,7))
-    plt.barh(range(len(sorted_idx)), feature_importance[sorted_idx], align='center')
-    plt.yticks(range(len(sorted_idx)), features_list[sorted_idx])
+    sorted_idx = np.argsort(feature_importance)[::-1][:20]
+    sorted_idx_full=np.argsort(feature_importance)
+    plt.figure(figsize=(13,10))
+    plt.barh(range(len(sorted_idx)), feature_importance[sorted_idx][::-1], align='center')
+    plt.yticks(range(len(sorted_idx)), features_list[sorted_idx][::-1])
     plt.xlabel('Importance')
     plt.title('Feature importances')
     plt.savefig('importancia_variables_RF.png')
+    #print(features_list[sorted_idx_full],feature_importance[sorted_idx_full])
     
     
    
@@ -295,6 +313,8 @@ if __name__ == "__main__":
     AUC2 = roc_auc_score(df_train["is_signal"], probs2[:,1])
     print("Train Area under Curve = {0}".format(AUC2))
     
+    print("RF AUC={0}".format(roc_auc_score(df_test['is_signal'],RF.predict_proba(df_test[vars_train])[:,1])))
+    
     plotLearningCurves(histObj)
     
     
@@ -313,9 +333,9 @@ if __name__ == "__main__":
     
     
     
-    f, ax = plt.subplots(figsize=(6,6))   #Medida del AUC (indicador cuan bueno es el modelo)
-    roc_auc_plot(y_test,RF.predict_proba(X_test),label='FOREST ',l='--')
-   # roc_auc_plot(y_train,RF.predict_proba(X_train),label='Forest train')
+    f, ax = plt.subplots(figsize=(7,8))   #Medida del AUC (indicador cuan bueno es el modelo) (6,6 default)
+    roc_auc_plot(y_test,RF.predict_proba(X_test),label='FOREST',l='--')
+    roc_auc_plot(y_train,RF.predict_proba(X_train),label='Forest train')
     #roc_auc_plot(y_test,gboost.predict_proba(X_test),label='GBOOST',l='-')						#Descomentar si gboost
     roc_auc_plot(y_test,model.predict(df_test[vars_train]),label='NN',l='-.')
     roc_auc_plot(y_train,model.predict(df_train[vars_train]),label='NN train')
@@ -327,3 +347,8 @@ if __name__ == "__main__":
     ax.set_ylim([0, 1])
     ax.set_title('Receiver Operator Characteristic curves')
     f.savefig('auc.png')    
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+
+print("Elapsed time:", elapsed_time/60, "minutes")
