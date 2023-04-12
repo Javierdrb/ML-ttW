@@ -23,13 +23,14 @@ from sklearn.metrics import classification_report, confusion_matrix, auc, precis
 from tensorflow import keras
 from sklearn import tree, ensemble
 import xgboost as xgb
+import joblib
 
 import time
 start_time = time.time()
 
 #pd.set_option('display.max_rows',None)
 #pd.set_option('display.max_columns',None)
-
+print('multiple fondo 40 vars')
 
 def roc_auc_plot(y_true, y_proba, label=' ', l='-', lw=1.0):
     from sklearn.metrics import roc_curve, roc_auc_score
@@ -41,37 +42,66 @@ if __name__ == "__main__":
 	
 ###########################					BUILDING THE DATAFRAME												##############################	
 	
-    mainpath = "/beegfs/data/TOPnanoAODv6/ttW_MC_Ntuples_skim/" #"/beegfs/data/nanoAODv9/ttW_data_forFlips/mva_vars_v2/"
+    mainpath = '/beegfs/data/TOPnanoAODv6/ttW_MC_Ntuples_skim_mvaVars/' #"/beegfs/data/nanoAODv9/ttW_data_forFlips/mva_vars_v2/"
 
     # Dictionary with sample names
     samples = {
-      "ttbar" : { 2016 : "TTLep_pow_part1", #Se mpueden meter listas
-                  2017 : "TTLep_pow",
-                  2018 : "TTLep_pow"},
-      "ttZ"   : { 2016 : "TTZToLLNuNu", 
-                  2017 : "TTZToLLNuNu",
-                  2018 : "TTZToLLNuNu"}, 
-      "ttW"   : { 2016 : "TTWToLNu_PSW", 
-                  2017 : "TTWToLNu_PSW",
-                  2018 : "TTWToLNu_fxfx"}
+      "ttbar" : { 2016 : "TTLep_pow_part1_Friend", #Se mpueden meter listas
+                  2017 : "TTLep_pow_Friend",
+                  2018 : "TTLep_pow_Friend"}, 
+      
+      "ttGdilep" : { 2016 : "TTGamma_Dilep_Friend", #Se mpueden meter listas
+                  2017 : "TTGamma_Dilep_Friend",
+                  2018 : "TTGamma_Dilep_Friend"}, 
+      
+      "ttGjets" : { 2016 : "TTGJets_Friend", #Se mpueden meter listas
+                  2017 : "TTGJets_Friend",
+                  2018 : "TTGJets_Friend"}, 
+      
+      "ttGsinglep" : { 2016 : "TTGamma_Singlep_Friend", #Se mpueden meter listas
+                  2017 : "TTGamma_Singlep_Friend",
+                  2018 : "TTGamma_Singlep_Friend"}, 
+                                                      
+      "ttW"   : { 2016 : "TTWToLNu_PSW_Friend", 
+                  2017 : "TTWToLNu_PSW_Friend",
+                  2018 : "TTWToLNu_fxfx_Friend"},
+                  
+      "ttZ"   : { 2016 : "TTZToLLNuNu_Friend",# "TTZToLLNuNu_m1to10_Friend"],
+                  2017 : "TTZToLLNuNu_Friend", #"TTZToLLNuNu_m1to10_Friend"],
+                  2018 : "TTZToLLNuNu_Friend"},#"TTZToLLNuNu_m1to10_Friend"]},
+                  
+      "ttZ2"   : { 2016 :  "TTZToLLNuNu_m1to10_Friend",
+                  2017 : "TTZToLLNuNu_m1to10_Friend",
+                  2018 : "TTZToLLNuNu_m1to10_Friend"},            
+                  
+      "ttH"   : { 2016 : "TTHnobb_pow_Friend", 
+                  2017 : "TTHnobb_pow_Friend",
+                  2018 : "TTHnobb_pow_Friend"}
+      
      
     }
     # -- Variables to read from trees (can be defined in a friend tree) 
-    friends = ["1_recl_enero"]   
+    friends = ["1_recl_enero"]    
     branches = ["year", 
-                "nLepGood", 
-                "LepGood_pt[0]", "LepGood_eta[0]","LepGood_phi[0]","LepGood_mass[0]","LepGood_pdgId[0]",
-                "LepGood_pt[1]", "LepGood_eta[1]","LepGood_phi[1]","LepGood_mass[1]","LepGood_pdgId[1]",
-                "JetSel_Recl_pt[0]", "JetSel_Recl_eta[0]","JetSel_Recl_phi[0]","JetSel_Recl_mass[0]",
-                "JetSel_Recl_pt[1]", "JetSel_Recl_eta[1]","JetSel_Recl_phi[1]","JetSel_Recl_mass[1]",
-                "JetSel_Recl_pt[2]", "JetSel_Recl_eta[2]","JetSel_Recl_phi[2]","JetSel_Recl_mass[2]",
-                "JetSel_Recl_pt[3]", "JetSel_Recl_eta[3]","JetSel_Recl_phi[3]","JetSel_Recl_mass[3]",
-                #"JetSel_Recl_pt[2]","JetSel_Recl_pt[3]","JetSel_Recl_pt[4]",
-                "nJet25_Recl", "htJet25j_Recl", 
-                "MET_pt", 
-                "nBJetLoose25_Recl","nBJetMedium25_Recl", "nBJetLoose40_Recl","nBJetMedium40_Recl",
-                "LepGood_jetBTagDeepFlav[0]","LepGood_jetBTagDeepFlav[1]",
-                "JetSel_Recl_btagDeepFlavB[0]","JetSel_Recl_btagDeepFlavB[1]","JetSel_Recl_btagDeepFlavB[2]","JetSel_Recl_btagDeepFlavB[3]"]
+                         "nLepGood", 
+                         "lep1_pt", "lep1_eta","lep1_phi","lep1_mass","lep1_pdgId",
+                         "lep2_pt", "lep2_eta","lep2_phi","lep2_mass","lep2_pdgId",
+                        # "lep3_pt", "lep3_eta","lep3_phi","lep3_mass",			For the moment, we will just do the training with events of 2 leptons
+                         "nJet25_Recl", 
+                         "htJet25j_Recl", 
+                         "MET_pt", 
+                         "nBJetLoose25_Recl",
+                         "nBJetMedium25_Recl",
+                         "nBJetLoose40_Recl",
+                         "nBJetMedium40_Recl",
+                         "jet1_pt", "jet1_eta","jet1_phi","jet1_mass","jet1_btagDeepFlavB", 
+                         "jet2_pt", "jet2_eta","jet2_phi","jet2_mass","jet2_btagDeepFlavB",
+                         "jet3_pt", "jet3_eta","jet3_phi","jet3_mass","jet3_btagDeepFlavB",
+                         "jet4_pt", "jet4_eta","jet4_phi","jet4_mass","jet4_btagDeepFlavB",
+                         "jet5_pt", "jet5_eta","jet5_phi","jet5_mass","jet5_btagDeepFlavB",
+                         "jet6_pt", "jet6_eta","jet6_phi","jet6_mass","jet6_btagDeepFlavB",
+                         "jet7_pt", "jet7_eta","jet7_phi","jet7_mass","jet7_btagDeepFlavB",
+                         "eventNumber"]
     
     
     
@@ -86,22 +116,55 @@ if __name__ == "__main__":
     for year in [2016, 2017, 2018]:
       smp_ttw.load_data(                   #loaddata en samples.py
         path = mainpath + "%s"%year, 
-        selection = "(nLepGood==2)&(nJet25_Recl>=3)",  #&(JetSel_Recl_btagDeepFlavB[0]>=0.5)",    #Selection to add in case we deal with certain requirement (for instance if we add a variable on jets, we must ask for having at least one jet)
-        #stop=1000000,
-        stop=11000,
+        selection = "nLepGood==2",  #&(JetSel_Recl_btagDeepFlavB[0]>=0.5)",    #Selection to add in case we deal with certain requirement (for instance if we add a variable on jets, we must ask for having at least one jet)
+        stop=1000000,
+        #stop=658000,
         process = samples["ttW"][year]) 
     smp_ttw.label_dataframe(val = 1)   #etiquetado (señal 1 bck 0)
 
     # Create the bkg dataframe
+    smp_ttgdi = smp2df(branches = branches, 
+                    friends = friends, 
+                    name = "df_ttgdi")
+    for year in [2016, 2017, 2018]:
+      smp_ttgdi.load_data(
+        path = mainpath + "%s"%year, 
+        selection = "nLepGood==2",#"nJet25_Recl<=5",
+        stop=89403, #prop 4 fondos
+        process = samples["ttGdilep"][year]) 
+    smp_ttgdi.label_dataframe(val = 0)
+    
+    smp_ttgsi = smp2df(branches = branches, 
+                    friends = friends, 
+                    name = "df_ttgsi")
+    for year in [2016, 2017, 2018]:
+      smp_ttgsi.load_data(
+        path = mainpath + "%s"%year, 
+        selection = "nLepGood==2",#"nJet25_Recl<=5",
+        stop=35281, #prop 4 fondos
+        process = samples["ttGsinglep"][year]) 
+    smp_ttgsi.label_dataframe(val = 0)
+    
+    smp_ttgjet = smp2df(branches = branches, 
+                    friends = friends, 
+                    name = "df_ttgjet")
+    for year in [2016, 2017, 2018]:
+      smp_ttgjet.load_data(
+        path = mainpath + "%s"%year, 
+        selection = "nLepGood==2",#"nJet25_Recl<=5",
+        stop=27663, #prop 4 fondos
+        process = samples["ttGjets"][year]) 
+    smp_ttgjet.label_dataframe(val = 0)
+    
     smp_tt = smp2df(branches = branches, 
                     friends = friends, 
                     name = "df_tt")
     for year in [2016, 2017, 2018]:
       smp_tt.load_data(
         path = mainpath + "%s"%year, 
-        selection = "(nLepGood==2)&(nJet25_Recl>=3)",#"nJet25_Recl<=5",
-        stop=1000000,
-        #stop=80000,
+        selection = "nLepGood==2",#"nJet25_Recl<=5",
+        #stop=196705,  #prop 3 fondos
+        stop=147351, #prop 4 fondos
         process = samples["ttbar"][year]) 
     smp_tt.label_dataframe(val = 0)   #check that since this is bckg, val must be 0
     
@@ -111,25 +174,110 @@ if __name__ == "__main__":
     for year in [2016, 2017, 2018]:
       smp_ttz.load_data(
         path = mainpath + "%s"%year, 
-        selection = "(nLepGood==2)&(nJet25_Recl>=4)",#"nJet25_Recl<=5",
-        stop=70000,
-        #stop=80000,
+        selection = "nLepGood==2",#"nJet25_Recl<=5",
+        #stop=260300,  #prop 3 fondos
+        stop=191511, #prop 4 fondos
         process = samples["ttZ"][year]) 
     smp_ttz.label_dataframe(val = 0)
     
+    
+    smp_ttz2 = smp2df(branches = branches, 
+                    friends = friends, 
+                    name = "df_ttz2")
+    
+    for year in [2016, 2017, 2018]:
+      smp_ttz2.load_data(
+        path = mainpath + "%s"%year, 
+        selection = "nLepGood==2",#"nJet25_Recl<=5",
+        #stop=8700,  #prop 3 fondos
+        stop=7340, #prop 4 fondos
+        process = samples["ttZ2"][year]) 
+    smp_ttz2.label_dataframe(val = 0)
+    
+    smp_tth = smp2df(branches = branches, 
+                    friends = friends, 
+                    name = "df_tth")
+    for year in [2016, 2017, 2018]:
+      smp_tth.load_data(
+        path = mainpath + "%s"%year, 
+        selection = "nLepGood==2",#"nJet25_Recl<=5",
+        #stop=225705,  #prop 3 fondos
+        stop=170351,  #prop 4 fondos
+        process = samples["ttH"][year]) 
+    smp_tth.label_dataframe(val = 0)
+    
     df_ttw = smp_ttw.df
     df_ttbar = smp_tt.df
-    df_ttz=smp_ttz.df
+    df_ttz = smp_ttz.df
+    df_ttz2 = smp_ttz2.df
+    df_tth = smp_tth.df
+    df_ttgdi = smp_ttgdi.df
+    df_ttgsi = smp_ttgsi.df
+    df_ttgjet = smp_ttgjet.df
 
     print(df_ttw)
     print(df_ttbar)
     print(df_ttz)
+    print(df_ttz2)
+    print(df_tth)
+    print(df_ttgdi)
+    print(df_ttgsi)
+    print(df_ttgjet)
+    dos16=(df_ttw['year']==2016).sum()
+    dos17=(df_ttw['year']==2017).sum()
+    dos18=(df_ttw['year']==2018).sum()
+    print('En ttw 2016:{0}\n 2017:{1}\n 2018:{2}'.format(dos16,dos17,dos18))
+    print('total={0}'.format(dos16+dos17+dos18))
+    
+    dos16=(df_ttbar['year']==2016).sum()
+    dos17=(df_ttbar['year']==2017).sum()
+    dos18=(df_ttbar['year']==2018).sum()
+    print('En ttbar 2016:{0}\n 2017:{1}\n 2018:{2}'.format(dos16,dos17,dos18))
+    print('total={0}'.format(dos16+dos17+dos18))
+    
+    dos16=(df_ttz['year']==2016).sum()
+    dos17=(df_ttz['year']==2017).sum()
+    dos18=(df_ttz['year']==2018).sum()
+    print('En ttz 2016:{0}\n 2017:{1}\n 2018:{2}'.format(dos16,dos17,dos18))
+    print('total={0}'.format(dos16+dos17+dos18))
+    
+    dos16=(df_ttz2['year']==2016).sum()
+    dos17=(df_ttz2['year']==2017).sum()
+    dos18=(df_ttz2['year']==2018).sum()
+    print('En ttz (menor pt) 2016:{0}\n 2017:{1}\n 2018:{2}'.format(dos16,dos17,dos18))
+    print('total={0}'.format(dos16+dos17+dos18))
+    
+    dos16=(df_tth['year']==2016).sum()
+    dos17=(df_tth['year']==2017).sum()
+    dos18=(df_tth['year']==2018).sum()
+    print('En tth 2016:{0}\n 2017:{1}\n 2018:{2}'.format(dos16,dos17,dos18))
+    print('total={0}'.format(dos16+dos17+dos18))
+    
+    dos16=(df_ttgdi['year']==2016).sum()
+    dos17=(df_ttgdi['year']==2017).sum()
+    dos18=(df_ttgdi['year']==2018).sum()
+    print('En ttgDi 2016:{0}\n 2017:{1}\n 2018:{2}'.format(dos16,dos17,dos18))
+    print('total={0}'.format(dos16+dos17+dos18))
+    
+    dos16=(df_ttgsi['year']==2016).sum()
+    dos17=(df_ttgsi['year']==2017).sum()
+    dos18=(df_ttgsi['year']==2018).sum()
+    print('En ttgSi 2016:{0}\n 2017:{1}\n 2018:{2}'.format(dos16,dos17,dos18))
+    print('total={0}'.format(dos16+dos17+dos18))
+    
+    dos16=(df_ttgjet['year']==2016).sum()
+    dos17=(df_ttgjet['year']==2017).sum()
+    dos18=(df_ttgjet['year']==2018).sum()
+    print('En ttgJet 2016:{0}\n 2017:{1}\n 2018:{2}'.format(dos16,dos17,dos18))
+    print('total={0}'.format(dos16+dos17+dos18))
+   
+    
     
    
     
   
     # Combinamos todos los dataframes
-    dfs_to_combine = [df_ttw, df_ttbar]#,df_ttz]
+    dfs_to_combine = [df_ttw, df_ttbar,df_ttz,df_tth,df_ttgdi,df_ttgsi,df_ttgjet]
     df = dfu.combine_dataframes(dfs_to_combine, axis = 0) # Para concatenar filas
     
     
@@ -139,29 +287,29 @@ if __name__ == "__main__":
     ###############################      COMPLEX VARIABLE DEFINITION TO ADD TO THE 'SIMPLE' DATAFRAME  					############################  
     
     ######		B-tagging business #####
-    #df=df.assign(B1_pt=100)
-    #df=df.assign(B1_eta=100)
-    #df=df.assign(B1_phi=100)
-    #df=df.assign(B1_mass=100)
-    #df=df.assign(B2_pt=100)
-    #df=df.assign(B2_eta=100)
-    #df=df.assign(B2_phi=100)
-    #df=df.assign(B2_mass=100)
+    df=df.assign(B1_pt=100)
+    df=df.assign(B1_eta=100)
+    df=df.assign(B1_phi=100)
+    df=df.assign(B1_mass=100)
+    df=df.assign(B2_pt=100)
+    df=df.assign(B2_eta=100)
+    df=df.assign(B2_phi=100)
+    df=df.assign(B2_mass=100)
     
     
-    #btagging(df,workingpoint="Tight")
+    btagging(df,workingpoint="Loose")
     
     
     
     # Create 4 vectors
-    l1 = create4vec(df["LepGood_pt[0]"], df["LepGood_eta[0]"], df["LepGood_phi[0]"], df["LepGood_mass[0]"])
-    l2 = create4vec(df["LepGood_pt[1]"], df["LepGood_eta[1]"], df["LepGood_phi[1]"], df["LepGood_mass[1]"])
+    l1 = create4vec(df["lep1_pt"], df["lep1_eta"], df["lep1_phi"], df["lep1_mass"])
+    l2 = create4vec(df["lep2_pt"], df["lep2_eta"], df["lep2_phi"], df["lep2_mass"])
     
-    j1 = create4vec(df["JetSel_Recl_pt[0]"], df["JetSel_Recl_eta[0]"], df["JetSel_Recl_phi[0]"], df["JetSel_Recl_mass[0]"])
-    j2 = create4vec(df["JetSel_Recl_pt[1]"], df["JetSel_Recl_eta[1]"], df["JetSel_Recl_phi[1]"], df["JetSel_Recl_mass[1]"])
+    j1 = create4vec(df["jet1_pt"], df["jet1_eta"], df["jet1_phi"], df["jet1_mass"])
+    j2 = create4vec(df["jet2_pt"], df["jet2_eta"], df["jet2_phi"], df["jet2_mass"])
     
-    #b1=create4vec(df["B1_pt"],df["B1_eta"],df["B1_phi"],df["B1_mass"])
-    #b2=create4vec(df["B2_pt"],df["B2_eta"],df["B2_phi"],df["B2_mass"])
+    b1=create4vec(df["B1_pt"],df["B1_eta"],df["B1_phi"],df["B1_mass"])
+    b2=create4vec(df["B2_pt"],df["B2_eta"],df["B2_phi"],df["B2_mass"])
     
     
     
@@ -179,33 +327,33 @@ if __name__ == "__main__":
     
     #df["deltarlj11"]=deltar(l1,j1)
     #df["deltarlj12"]=deltar(l1,j2)
-    #df["deltarlj21"]=deltar(l2,j1)
-    #df["deltarlj22"]=deltar(l2,j2)
+    df["deltarlj21"]=deltar(l2,j1)
+    df["deltarlj22"]=deltar(l2,j2)
     
     df["combipt"]=combipt(l1,l2)
-    #df["deltaetalep"]=deltaeta(l1,l2)
-    #df["deltaphilep"]=deltaphi(l1,l2)
-    #df["deltarlep"]=deltar(l1,l2)
-    #df["deltarjet"]=deltar(j1,j2)     #dejar para xgb
+    df["deltaetalep"]=deltaeta(l1,l2)
+    df["deltaphilep"]=deltaphi(l1,l2)
+    df["deltarlep"]=deltar(l1,l2)
+    df["deltarjet"]=deltar(j1,j2)     #dejar para xgb
     
     
     
-    #df["deltarlb11"]=deltar(l1,b1)
-    #df["deltarlb12"]=deltar(l1,b2)
-    #df["deltarlb21"]=deltar(l2,b1)
-    #df["deltarlb22"]=deltar(l2,b2)
+    df["deltarlb11"]=deltar(l1,b1)
+    df["deltarlb12"]=deltar(l1,b2)
+    df["deltarlb21"]=deltar(l2,b1)
+    df["deltarlb22"]=deltar(l2,b2)
     
-    #df["deltarjb11"]=deltar(j1,b1)    #dejar para xgb
+    df["deltarjb11"]=deltar(j1,b1)    #dejar para xgb
     #df["deltarjb12"]=deltar(j1,b2)
     #df["deltarjb21"]=deltar(j2,b1)
-    #df["deltarjb22"]=deltar(j2,b2)
+    df["deltarjb22"]=deltar(j2,b2)
     
-    #df["notBjets"]=df["nJet25_Recl"]-df["nBJetLoose25_Recl"]
+    df["notBjets"]=df["nJet25_Recl"]-df["nBJetLoose25_Recl"]
     
     
     
-    flavouring_prev(df)
-    charge_prev(df)
+    flavouring(df)
+    charge(df)
     print(df)
     
     
@@ -216,27 +364,7 @@ if __name__ == "__main__":
     
     
     #Variables to add to the training. We can split a diferent selection of variables for each model:
-    
-    #vars_train_RF = ["year","htJet25j_Recl","jet2_pt","nJet25_Recl","jet3_pt","jet2_mass","lep2_pt","jet3_btagDeepFlavB",
-     #"lep1_pt","mlj11","jet3_mass","jet1_pt","jet4_mass","lep1_charge","lep2_mass","jet4_pt","jet3_eta","jet3_phi",
-     #'jet1_mass','jet4_btagDeepFlavB','Flav_muon','jet4_phi','mll','lep2_elec','jet4_eta','mlj12',"jet5_eta","Flav_elec",'mlj21','mlj22',"combipt","lep2_charge"]   #Up to here ok for the NN
-    
-    vars_train_RF=["year","htJet25j_Recl","JetSel_Recl_pt[1]","nJet25_Recl","JetSel_Recl_pt[2]","JetSel_Recl_mass[1]","LepGood_pt[1]","JetSel_Recl_btagDeepFlavB[2]",
-     "LepGood_pt[0]","mlj11","JetSel_Recl_mass[2]","JetSel_Recl_pt[0]","lep1_charge","LepGood_mass[1]","JetSel_Recl_eta[2]","JetSel_Recl_phi[2]",
-     "JetSel_Recl_mass[0]","Flav_muon","mll",'lep2_elec',"mlj12","Flav_elec","mlj21","mlj22","combipt","lep2_charge"]#,"JetSel_Recl_mass[3]""JetSel_Recl_pt[3]", , "JetSel_Recl_eta[3]" "JetSel_Recl_phi[3]","JetSel_Recl_btagDeepFlavB[3]"
-     
-    #vars_train_NN=["year","htJet25j_Recl","jet2_pt","nJet25_Recl","jet3_pt","jet2_mass","lep2_pt","jet3_btagDeepFlavB",
-     #"lep1_pt","mlj11","jet3_mass","jet1_pt","jet4_mass","lep1_charge","lep2_mass","jet4_pt","jet3_eta","jet3_phi",
-     #'jet1_mass','jet4_btagDeepFlavB','Flav_muon','jet4_phi','mll','lep2_elec','jet4_eta','mlj12',"jet5_eta","Flav_elec",'mlj21','mlj22',"combipt","lep2_charge",   #aprox hasta aqui bn para RF
-     #'jet2_phi','notBjets','jet2_btagDeepFlavB', 'jet5_pt', 'jet2_eta', 'nBJetLoose25_Recl', 'MET_pt',
-     #"B2_pt",'B1_mass', 'B1_pt', 'B2_mass',"B1_eta","B2_eta"]
-     
-    #vars_train_gboost=['htJet25j_Recl','jet3_pt' ,'jet2_pt' ,'year', 'jet4_pt', 'combipt', 'lep1_charge', 'lep2_mass', 'mlj12','lep2_elec',
-    # 'lep2_pt', 'Flav_muon','B2_pt' ,'mlj11' ,'Flav_elec' ,'nBJetMedium25_Recl', 'deltarjb11' ,'jet3_eta','deltarjet', 'jet5_pt'] 
-     
-     
-     
-     
+   
     #vars_train_RF=["notBjets","deltaetalep","deltaphilep","deltarjet","deltarlep","combipt","mll","year",
      #                    "deltaphilj11","deltaphilj12","deltaphilj21","deltaphilj22",
       #                   "deltarlj11","deltarlj12","deltarlj21","deltarlj22",
@@ -265,10 +393,29 @@ if __name__ == "__main__":
                          #"jet7_pt", "jet7_eta","jet7_phi","jet7_mass","jet7_btagDeepFlavB"]         # (A collection of all of those from one can choose)
          
     
+     
+
+    vars_train_gboost=['lep2_charge', 'mll', 'htJet25j_Recl', 'MET_pt' ,'notBjets' ,'Flav_mix',
+     'mlj11', 'jet3_pt', 'mlj12' ,'jet1_pt', 'lep1_charge', 'jet7_pt', 'deltaetalep',
+     'lep2_pt', 'deltarlep', 'jet6_pt', 'jet1_btagDeepFlavB', 'lep1_eta', 'jet5_pt',
+     'mlj21', 'deltarjb22', 'mlj22', 'B2_eta', 'jet2_pt', 'Flav_elec', 'lep2_mass',
+     'lep2_eta', 'lep1_pt', 'combipt', 'lep1_mass', 'nJet25_Recl', 'jet4_pt',
+     'deltaphilep', 'deltarlb11', 'B1_eta' ,'jet4_eta', 'B2_pt' ,'deltarlb12',
+     'jet2_btagDeepFlavB', 'deltarjet']
+    vars_train_NN=vars_train_gboost[:]
+    vars_train_RF=['mll', 'MET_pt', 'lep2_charge', 'htJet25j_Recl', 'lep1_charge', 'jet1_pt',
+     'mlj12', 'jet3_pt', 'mlj11', 'deltarlep', 'deltaetalep', 'notBjets' ,'jet2_pt',
+     'Flav_mix', 'nJet25_Recl', 'lep2_pt', 'mlj21', 'lep1_pt', 'combipt',
+     'jet1_btagDeepFlavB', 'jet4_pt', 'mlj22', 'jet3_mass', 'jet1_mass', 'jet7_pt',
+     'deltarjb11', 'B1_pt', 'deltarjb22', 'deltaphilep', 'lep2_eta' ,'deltarlj21',
+     'lep2_mass' ,'lep1_eta','jet6_pt', 'jet4_mass' ,'deltarjet' ,'deltarlj22',
+     'jet2_mass' ,'deltarlb21' ,'lep2_phi']
    
-   
+    
+    
+      
     #		Splitting of datasets (for each of the training vars subset)
-   
+    
     X_train_RF, X_test_RF, y_train_RF, y_test_RF = train_test_split(df[vars_train_RF], df['is_signal'], test_size=0.3, random_state=1)
     df_train_RF=pd.concat([X_train_RF,y_train_RF], axis=1)
     df_test_RF=pd.concat([X_test_RF,y_test_RF], axis=1)
@@ -279,24 +426,24 @@ if __name__ == "__main__":
     
     
     
-    #X_train_NN, X_test_NN, y_train_NN, y_test_NN = train_test_split(df[vars_train_NN], df['is_signal'], test_size=0.3, random_state=1)
-    #df_train_NN=pd.concat([X_train_NN,y_train_NN], axis=1)
-    #df_test_NN=pd.concat([X_test_NN,y_test_NN], axis=1)
+    X_train_NN, X_test_NN, y_train_NN, y_test_NN = train_test_split(df[vars_train_NN], df['is_signal'], test_size=0.3, random_state=1)
+    df_train_NN=pd.concat([X_train_NN,y_train_NN], axis=1)
+    df_test_NN=pd.concat([X_test_NN,y_test_NN], axis=1)
     
-    #X_test_NN, X_validation_NN, y_test_NN, y_validation_NN = train_test_split(df_test_NN[vars_train_NN], df_test_NN['is_signal'], test_size=0.8, random_state=5)
-    #df_test_NN=pd.concat([X_test_NN,y_test_NN], axis=1)
-    #df_validation_NN=pd.concat([X_validation_NN,y_validation_NN], axis=1)
-    
-    
+    X_test_NN, X_validation_NN, y_test_NN, y_validation_NN = train_test_split(df_test_NN[vars_train_NN], df_test_NN['is_signal'], test_size=0.8, random_state=5)
+    df_test_NN=pd.concat([X_test_NN,y_test_NN], axis=1)
+    df_validation_NN=pd.concat([X_validation_NN,y_validation_NN], axis=1)
     
     
-    #X_train_gboost, X_test_gboost, y_train_gboost, y_test_gboost = train_test_split(df[vars_train_gboost], df['is_signal'], test_size=0.3, random_state=1)
-    #df_train_gboost=pd.concat([X_train_gboost,y_train_gboost], axis=1)
-    #df_test_gboost=pd.concat([X_test_gboost,y_test_gboost], axis=1)
     
-    #X_test_gboost, X_validation_gboost, y_test_gboost, y_validation_gboost = train_test_split(df_test_gboost[vars_train_gboost], df_test_gboost['is_signal'], test_size=0.8, random_state=5)
-    #df_test_gboost=pd.concat([X_test_gboost,y_test_gboost], axis=1)
-    #df_validation_gboost=pd.concat([X_validation_gboost,y_validation_gboost], axis=1)
+    
+    X_train_gboost, X_test_gboost, y_train_gboost, y_test_gboost = train_test_split(df[vars_train_gboost], df['is_signal'], test_size=0.3, random_state=1)
+    df_train_gboost=pd.concat([X_train_gboost,y_train_gboost], axis=1)
+    df_test_gboost=pd.concat([X_test_gboost,y_test_gboost], axis=1)
+    
+    X_test_gboost, X_validation_gboost, y_test_gboost, y_validation_gboost = train_test_split(df_test_gboost[vars_train_gboost], df_test_gboost['is_signal'], test_size=0.8, random_state=5)
+    df_test_gboost=pd.concat([X_test_gboost,y_test_gboost], axis=1)
+    df_validation_gboost=pd.concat([X_validation_gboost,y_validation_gboost], axis=1)
     
     
     
@@ -310,33 +457,40 @@ if __name__ == "__main__":
     RF.fit(X_train_RF,y_train_RF)  #Trainig of the RF
     #RF=RandomForestClassifier(n_jobs=-1,min_samples_leaf=5,max_depth=1/3*len(vars_train_RF),min_samples_split=2,n_estimators=100,max_features=9)
     #RF.fit(X_train_RF,y_train_RF) 
+    filename = 'saved_models/RF_ttw-multiple_40vars.joblib'
+    joblib.dump(RF, open(filename, 'wb'))
     
     #Best in grid: (n_feat=,9 n_est=100, min_samp_split=2,min_samples_leaf=5) (3 decimas de overfitting y la mejora es de 0.01=>no merece la pena)
     
     
     
-    #gboost = xgb.XGBClassifier(n_estimators=100, max_depth=3, learning_rate=0.25, n_jobs=-1,use_label_encoder=False)#ensemble.GradientBoostingClassifier(n_jobs=-1,max_depth=15, min_samples_leaf=5)				#Descomentar si quiero comparar con gradientboosting (pero solo se puede correr con pocos datos, boosting no paraleliza bien)
-    #gboost.fit(X_train_gboost,y_train_gboost)  #Training of the GradBoost
+    gboost = xgb.XGBClassifier(n_estimators=100, max_depth=3, learning_rate=0.25, n_jobs=-1,use_label_encoder=False)#ensemble.GradientBoostingClassifier(n_jobs=-1,max_depth=15, min_samples_leaf=5)				#Descomentar si quiero comparar con gradientboosting (pero solo se puede correr con pocos datos, boosting no paraleliza bien)
+    gboost.fit(X_train_gboost,y_train_gboost)  #Training of the GradBoost
+    
+    filename2 = 'saved_models/BDT_ttw-multiple_40vars.joblib'
+    joblib.dump(gboost, open(filename2, 'wb'))
     
     
     
     
-    #model = keras.models.Sequential()
-    #normal_ini=keras.initializers.glorot_normal(seed=None)
-    #model.add(keras.layers.Dense(64,  input_shape = (len(vars_train_NN),), activation='relu'))
-    #model.add(keras.layers.Dense(32, activation='relu'))
-    #model.add(keras.layers.Dense(16, activation='relu'))
-    #model.add(keras.layers.Dense(16, activation='relu'))
-    #model.add(keras.layers.Dense(8, activation='relu'))
-    #model.add(keras.layers.Dense(2, activation='softmax'))
-    #model.summary()
+    model = keras.models.Sequential()
+    normal_ini=keras.initializers.glorot_normal(seed=None)
+    model.add(keras.layers.Dense(64,  input_shape = (len(vars_train_NN),), activation='relu'))
+    model.add(keras.layers.Dense(32, activation='relu'))
+    model.add(keras.layers.Dense(16, activation='relu'))
+    model.add(keras.layers.Dense(16, activation='relu'))
+    model.add(keras.layers.Dense(8, activation='relu'))
+    model.add(keras.layers.Dense(2, activation='softmax'))
+    model.summary()
     
-    #sgd = keras.optimizers.SGD(lr=0.01)
-    #adamax=keras.optimizers.Adamax(learning_rate=0.02, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
-    #adam=keras.optimizers.Adam(lr=0.0005)
-    #model.compile(loss='binary_crossentropy', optimizer=adam, metrics = ["accuracy"])
-    #histObj = model.fit(df_train_NN[vars_train_NN], keras.utils.to_categorical(df_train_NN["is_signal"]), epochs=25, batch_size=1000,shuffle=True,validation_data=(df_validation_NN[vars_train_NN], keras.utils.to_categorical(df_validation_NN["is_signal"])))
+    sgd = keras.optimizers.SGD(lr=0.01)
+    adamax=keras.optimizers.Adamax(learning_rate=0.02, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
+    adam=keras.optimizers.Adam(lr=0.0005)
+    model.compile(loss='binary_crossentropy', optimizer=adam, metrics = ["accuracy"])
+    histObj = model.fit(df_train_NN[vars_train_NN], keras.utils.to_categorical(df_train_NN["is_signal"]), epochs=25, batch_size=1000,shuffle=True,validation_data=(df_validation_NN[vars_train_NN], keras.utils.to_categorical(df_validation_NN["is_signal"])))
     #Trainig of the neural net
+    
+    model.save('saved_models/NN_ttW-multiple_40vars.h5')
     
     
     
@@ -356,23 +510,23 @@ if __name__ == "__main__":
     plt.yticks(range(len(sorted_idx)), features_list[sorted_idx][::-1])
     plt.xlabel('Importance')
     plt.title('Feature importances')
-    plt.savefig('importancia_variables_RF_3sets.png')
-    #print('RF:',features_list[sorted_idx_full],feature_importance[sorted_idx_full])
+    plt.savefig('importancia_variables_RF_4sets.png')
+    print('RF:',np.flip(features_list[sorted_idx_full]),feature_importance[sorted_idx_full])
     
     
     # Variable importance of Gradient Boosting:
     
-    #features_list = df_train_gboost.columns.values
-    #feature_importance = gboost.feature_importances_
-    #sorted_idx = np.argsort(feature_importance)[::-1][:20]
-    #sorted_idx_full=np.argsort(feature_importance)
-    #plt.figure(figsize=(13,10))
-    #plt.barh(range(len(sorted_idx)), feature_importance[sorted_idx][::-1], align='center')
-    #plt.yticks(range(len(sorted_idx)), features_list[sorted_idx][::-1])
-    #plt.xlabel('Importance')
-    #plt.title('Feature importances')
-    #plt.savefig('importancia_variables_Gboost.png')
-    #print('gboost:',features_list[sorted_idx_full],feature_importance[sorted_idx_full])
+    features_list = df_train_gboost.columns.values
+    feature_importance = gboost.feature_importances_
+    sorted_idx = np.argsort(feature_importance)[::-1][:20]
+    sorted_idx_full=np.argsort(feature_importance)
+    plt.figure(figsize=(13,10))
+    plt.barh(range(len(sorted_idx)), feature_importance[sorted_idx][::-1], align='center')
+    plt.yticks(range(len(sorted_idx)), features_list[sorted_idx][::-1])
+    plt.xlabel('Importance')
+    plt.title('Feature importances')
+    plt.savefig('importancia_variables_Gboost_4sets.png')
+    print('gboost:',np.flip(features_list[sorted_idx_full]),feature_importance[sorted_idx_full])
     
     
     
@@ -386,24 +540,24 @@ if __name__ == "__main__":
     from sklearn.metrics import roc_curve
     from sklearn.metrics import roc_auc_score
     import matplotlib.pyplot as plt
-    #print("Running on test sample. This may take a moment.")
-    #probs = model.predict(df_test_NN[vars_train_NN])#predict probability over test sample
-    #AUC = roc_auc_score(df_test_NN["is_signal"], probs[:,1])
-    #print("Test Area under Curve = {0}".format(AUC))
+    print("Running on test sample. This may take a moment.")
+    probs = model.predict(df_test_NN[vars_train_NN])#predict probability over test sample
+    AUC = roc_auc_score(df_test_NN["is_signal"], probs[:,1])
+    print("Test Area under Curve = {0}".format(AUC))
     
     ######Prediccion sobre train
-    #print("Running on train sample. This may take a moment.")
-    #probs2 = model.predict(df_train_NN[vars_train_NN])#predict probability over train sample
-    #AUC2 = roc_auc_score(df_train_NN["is_signal"], probs2[:,1])
-    #print("Train Area under Curve = {0}".format(AUC2))
+    print("Running on train sample. This may take a moment.")
+    probs2 = model.predict(df_train_NN[vars_train_NN])#predict probability over train sample
+    AUC2 = roc_auc_score(df_train_NN["is_signal"], probs2[:,1])
+    print("Train Area under Curve = {0}".format(AUC2))
    
     #plotLearningCurves(histObj)
     
     
     print("RF AUC (test) = {0}".format(roc_auc_score(df_test_RF['is_signal'],RF.predict_proba(df_test_RF[vars_train_RF])[:,1])))
     print("RF AUC (train) = {0}".format(roc_auc_score(df_train_RF['is_signal'],RF.predict_proba(df_train_RF[vars_train_RF])[:,1])))
-    #print("Gboost AUC (test) = {0}".format(roc_auc_score(df_test_gboost['is_signal'],gboost.predict_proba(df_test_gboost[vars_train_gboost])[:,1])))
-    #print("Gboost AUC (train) = {0}".format(roc_auc_score(df_train_gboost['is_signal'],gboost.predict_proba(df_train_gboost[vars_train_gboost])[:,1])))
+    print("Gboost AUC (test) = {0}".format(roc_auc_score(df_test_gboost['is_signal'],gboost.predict_proba(df_test_gboost[vars_train_gboost])[:,1])))
+    print("Gboost AUC (train) = {0}".format(roc_auc_score(df_train_gboost['is_signal'],gboost.predict_proba(df_train_gboost[vars_train_gboost])[:,1])))
     
     
     
@@ -412,11 +566,11 @@ if __name__ == "__main__":
     roc_auc_plot(y_test_RF,RF.predict_proba(X_test_RF),label='Forest test',l='--')
     roc_auc_plot(y_train_RF,RF.predict_proba(X_train_RF),label='Forest train')
     
-    #roc_auc_plot(y_test_gboost,gboost.predict_proba(X_test_gboost),label='Gboost test',l='-')						
-    #roc_auc_plot(y_train_gboost,gboost.predict_proba(X_train_gboost),label='Gboost train',l='-')	
+    roc_auc_plot(y_test_gboost,gboost.predict_proba(X_test_gboost),label='Gboost test',l='-')						
+    roc_auc_plot(y_train_gboost,gboost.predict_proba(X_train_gboost),label='Gboost train',l='-')	
     
-    #roc_auc_plot(y_test_NN,model.predict(df_test_NN[vars_train_NN]),label='Net test',l='-.')
-    #roc_auc_plot(y_train_NN,model.predict(df_train_NN[vars_train_NN]),label='Net train')
+    roc_auc_plot(y_test_NN,model.predict(df_test_NN[vars_train_NN]),label='Net test',l='-.')
+    roc_auc_plot(y_train_NN,model.predict(df_train_NN[vars_train_NN]),label='Net train')
     
     ax.plot([0,1], [0,1], color='k', linewidth=0.5, linestyle='--', label='Random Classifier')    
     ax.legend(loc="lower right")    
@@ -425,7 +579,7 @@ if __name__ == "__main__":
     ax.set_xlim([0, 1])
     ax.set_ylim([0, 1])
     ax.set_title('Receiver Operator Characteristic curves')
-    f.savefig('auc_3sets.png')    
+    f.savefig('auc_4sets_40vars.png')    
 
 end_time = time.time()
 elapsed_time = end_time - start_time
